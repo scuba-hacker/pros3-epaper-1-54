@@ -560,6 +560,7 @@ void showPartialUpdate()
 void drawGrid()
 {
   uint16_t x, y;
+
   display.firstPage();
   do
   {
@@ -756,12 +757,6 @@ void setup()
   helloValue(309.9, 1);
   delay(1000);
 
-  helloValue(554.9, 1);
-  delay(1000);
-
-  helloValue(622.9, 1);
-  delay(1000);
-  
   showFont("FreeMonoBold9pt7b", &FreeMonoBold9pt7b);
   delay(1000);
 
@@ -772,8 +767,9 @@ void setup()
 
   display.writeScreenBuffer();
 
-  // drawBitmaps200x200();
+  drawBitmaps200x200();
 
+  display.setPartialWindow(0, 0, display.width(), display.height());
   drawGraphics();
 
   if (display.epd2.hasPartialUpdate)
