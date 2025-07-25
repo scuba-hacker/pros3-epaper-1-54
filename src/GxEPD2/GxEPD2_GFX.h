@@ -22,7 +22,7 @@
 #define GxEPD2_GFX_ROOT_CLASS Adafruit_GFX
 #endif
 
-#include <GxEPD2_EPD.h>
+#include "GxEPD2_EPD.h"
 
 class GxEPD2_GFX : public GxEPD2_GFX_ROOT_CLASS
 {

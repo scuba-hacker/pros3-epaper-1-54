@@ -24,11 +24,11 @@
 #include <UMS3.h>
 
 // uncomment next line to use HSPI for EPD (and e.g VSPI for SD), e.g. with Waveshare ESP32 Driver Board
-// #define USE_HSPI_FOR_EPD
+#define USE_HSPI_FOR_EPD
 
 // base class GxEPD2_GFX can be used to pass references or pointers to the display instance as parameter, uses ~1.2k more code
 // enable or disable GxEPD2_GFX base class
-#define ENABLE_GxEPD2_GFX 0
+#define ENABLE_GxEPD2_GFX 1
 
 // uncomment next line to use class GFX of library GFX_Root instead of Adafruit_GFX
 //#include <GFX.h>
@@ -43,8 +43,21 @@
 
 #define DISPLAY_HEIGHT 200
 
-// GDEH0154D67 display uses the SSD1681 driver (replaced the GDEP015OC1 using IL3829 driver)
-GxEPD2_BW<GxEPD2_154_D67, DISPLAY_HEIGHT> display(GxEPD2_154_D67(/*CS=*/ 34, /*DC=*/ 1, /*RST=*/ 2, /*BUSY=*/ 4));
+// https://esp32.com/viewtopic.php?t=28311
+// 34-39 are not input only pins on ESP32-S3 - (they are on ESP32 though)
+// On ProS3 only GPIO 0 and GPIO 3 are strapping pins
+// GPIO summary
+// https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/gpio.html
+// GPIO 
+#define EPAPER_BUSY_PURPLE 4
+#define EPAPER_RST_WHITE 2          
+#define EPAPER_DC_GREEN 1           
+#define EPAPER_CS_ORANGE 34         // Standard Arduino Hardware SPI Chip-Select Pro S3
+#define EPAPER_CLK_YELLOW 36        //   Standard Arduino Hardware SPI CLK for Pro S3
+#define EPAPER_DIN_MOSI_BLUE 35     // Standard Arduino Hardware SPI MOSI for Pro S3
+
+GxEPD2_BW<GxEPD2_154_D67, DISPLAY_HEIGHT> display(GxEPD2_154_D67(/*CS=*/ EPAPER_CS_ORANGE, /*DC=*/ EPAPER_DC_GREEN, 
+                                                                /*RST=*/ EPAPER_RST_WHITE, /*BUSY=*/ EPAPER_BUSY_PURPLE));  // as per Unexpected Maker ProS3
 
 #if defined(ESP32) && defined(USE_HSPI_FOR_EPD)
 SPIClass hspi(HSPI);
@@ -61,7 +74,7 @@ const char HelloEpaper[] = "Hello E-Paper!";
 
 void helloWorld()
 {
-  //Serial.println("helloWorld");
+  Serial.println("helloWorld");
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
 
@@ -695,13 +708,6 @@ void drawGraphics()
   delay(1000);
 }
 
-#define EPAPER_BUSY_PURPLE 4
-#define EPAPER_RST_WHITE 2
-#define EPAPER_DC_GREEN 1
-#define EPAPER_CS_ORANGE 34
-#define EPAPER_CLK_YELLOW 36
-#define EPAPER_DIN_MOSI_BLUE 35
-
 UMS3 UM;
 
 void setup()
@@ -713,17 +719,16 @@ void setup()
 
   // SPI.h defaults to the ESP32-S3 SPI pins: MOSI=35, MISO=37, SCK=36
   Serial.begin(115200);
+  delay(2000);
   Serial.println();
   Serial.println("setup");
   delay(100);
 
-  GxEPD2_BW<GxEPD2_154_D67, DISPLAY_HEIGHT> display(GxEPD2_154_D67(/*CS=*/ EPAPER_CS_ORANGE, /*DC=*/ EPAPER_DC_GREEN, /*RST=*/ EPAPER_RST_WHITE, /*BUSY=*/ EPAPER_BUSY_PURPLE));  // as per Unexpected Maker ProS3
-
   #if defined(ESP32) && defined(USE_HSPI_FOR_EPD)
-    hspi.begin(36, // clk
+    hspi.begin(EPAPER_CLK_YELLOW, // clk
               37, // miso
-              35, // mosi
-              34 // cs  
+              EPAPER_DIN_MOSI_BLUE, // mosi
+              EPAPER_CS_ORANGE // cs  
               ); // remap hspi for EPD (swap pins)
     display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
   #endif
